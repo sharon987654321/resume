@@ -1,16 +1,15 @@
 from flask import Flask, render_template, request
-import mysql.connector
+from flask_mysqldb import MySQL
 
 app = Flask(__name__)
 
-# Connect to XAMPP MySQL (adjust credentials as needed)
-db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="",
-    database="resume_db"
-)
-cursor = db.cursor()
+# MySQL configurations
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = ''
+app.config['MYSQL_DB'] = 'resume_db'
+
+mysql = MySQL(app)
 
 @app.route('/')
 def home():
@@ -31,9 +30,11 @@ def contact():
         cell = request.form['cell']
         email = request.form['email']
         address = request.form['address']
-        cursor.execute("INSERT INTO contact (name, cell, email, address) VALUES (%s, %s, %s, %s)", 
-                       (name, cell, email, address))
-        db.commit()
+        cur = mysql.connection.cursor()
+        cur.execute("INSERT INTO contact (name, cell, email, address) VALUES (%s, %s, %s, %s)",
+                    (name, cell, email, address))
+        mysql.connection.commit()
+        cur.close()
         return "Message Sent Successfully!"
     return render_template('contact.html')
 
